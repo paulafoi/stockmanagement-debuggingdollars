@@ -36,18 +36,23 @@ def symbol_info(symbol):
         data_for_frontend = []
         for date in last_5_days:
             day_data = daily_series[date]
-            data_for_frontend.append({
-                "date": date,
-                "open": day_data["1. open"],
-                "high": day_data["2. high"],
-                "low": day_data["3. low"],
-                "close": day_data["4. close"],
-                "volume": day_data["5. volume"]
-            })
+            # Adjust the structure here to match the desired output
+            formatted_data = [
+                date, 
+                {
+                    "1. open": day_data["1. open"],
+                    "2. high": day_data["2. high"],
+                    "3. low": day_data["3. low"],
+                    "4. close": day_data["4. close"],
+                    "5. volume": day_data["5. volume"]
+                }
+            ]
+            data_for_frontend.append(formatted_data)
     else:
         print(f"Failed to get data: {response.status_code}")
 
     return jsonify(data_for_frontend)
+
 
 
 def user_database():
