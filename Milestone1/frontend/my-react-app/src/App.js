@@ -1,22 +1,26 @@
-// App.js
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import HomePage from "./components/HomePage";
-import UserOverview from "./components/UserOverview";
-import StockDetails from "./components/StockDetails";
+import { Container, Navbar } from "react-bootstrap";
+import PortfolioOverview from "./components/PortfolioOverview";
+import "bootstrap/dist/css/bootstrap.min.css";
 
-function App() {
+const App = () => {
   return (
-    <Router>
-      <div className="App">
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/:userID" element={<UserOverview />} />
-          <Route path="/stockinfo/:symbol" element={<StockDetails />} />
-        </Routes>
+    <>
+      <Navbar bg="dark" variant="dark" expand="lg">
+        <Container>
+          <Navbar.Brand href="#home">DebuggingDollars</Navbar.Brand>
+        </Container>
+      </Navbar>
+      <Container style={{ marginTop: "20px", marginBottom: "20px" }}>
+        <PortfolioOverview />
+      </Container>
+      <div className="footer mt-auto py-3 bg-light">
+        <Container>
+          <span className="text-muted">© 2024 DebuggingDollars</span>
+        </Container>
       </div>
-    </Router>
+    </>
   );
-}
+};
 
 export default App;
