@@ -2,13 +2,14 @@ import React, { useState, useEffect } from "react";
 import Accordion from "react-bootstrap/Accordion";
 import { Container, Row, Col, Alert } from "react-bootstrap";
 import StockDetails from "./StockDetails";
+import { useParams } from "react-router-dom"; // Import useParams
 
 const PortfolioOverview = () => {
   const [portfolio, setPortfolio] = useState({});
   const [error, setError] = useState("");
+  const { userId } = useParams(); // Use useParams to get userId from the URL
 
   useEffect(() => {
-    const userId = window.location.pathname.split("/").pop();
     const fetchPortfolio = async () => {
       try {
         const response = await fetch(
@@ -25,7 +26,7 @@ const PortfolioOverview = () => {
     };
 
     fetchPortfolio();
-  }, []);
+  }, [userId]); // Add userId as a dependency to useEffect
 
   const PortfolioAccordion = () => {
     return (
@@ -51,7 +52,11 @@ const PortfolioOverview = () => {
         <Col>
           <h2>Portfolio Overview</h2>
           {error && <Alert variant="danger">{error}</Alert>}
-          <PortfolioAccordion />
+          {Object.keys(portfolio).length > 0 ? (
+            <PortfolioAccordion />
+          ) : (
+            !error && <p>Loading portfolio...</p> // Show loading state when there's no error and portfolio is empty
+          )}
         </Col>
       </Row>
     </Container>

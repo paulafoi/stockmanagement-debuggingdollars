@@ -84,7 +84,6 @@ def av_api(symbol):
 
 
 
-
 def user_database():
     return { 
         'user1': { 
