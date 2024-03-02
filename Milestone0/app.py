@@ -54,7 +54,6 @@ def symbol_info(symbol):
     return jsonify(data_for_frontend)
 
 
-
 def user_database():
     return { 
         'user1': { 

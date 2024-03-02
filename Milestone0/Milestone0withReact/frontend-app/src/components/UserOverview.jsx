@@ -1,23 +1,22 @@
 import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 function UserOverview() {
-  const { userID } = useParams();
   const [userStocks, setUserStocks] = useState(null);
 
   useEffect(() => {
-    fetch(`http://127.0.0.1:5000/${userID}`)
+    fetch(`http://127.0.0.1:5000/user1`)
       .then((response) => response.json())
       .then((data) => setUserStocks(data))
       .catch((error) => console.error("Error fetching data: ", error));
-  }, [userID]);
+  }, [user1]);
 
   if (!userStocks) return <div>Loading...</div>;
   if (userStocks.error) return <div>{userStocks.error}</div>;
 
   return (
     <div>
-      <h1>{userID}'s Stock Portfolio</h1>
+      <h1> User1's Stock Portfolio</h1>
       <p>
         Welcome to your portfolio overview. Please find below all the symbols in
         your portfolio
