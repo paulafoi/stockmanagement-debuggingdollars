@@ -5,7 +5,6 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
-
 @app.route('/')
 def api_root():
     return jsonify(message="Debugging Dollars API is running")
@@ -25,11 +24,11 @@ def stockinfo_for_symbol(symbol):
         formatted_data = [
             date, 
                 {
-                    "1. open": day_data["1. open"],
-                    "2. high": day_data["2. high"],
-                    "3. low": day_data["3. low"],
-                    "4. close": day_data["4. close"],
-                    "5. volume": day_data["5. volume"]
+                    "1. open": round(float(day_data["1. open"]),2),
+                    "2. high": round(float(day_data["2. high"]),2),
+                    "3. low": round(float(day_data["3. low"]),2),
+                    "4. close": round(float(day_data["4. close"]),2),
+                    "5. volume": round(float(day_data["5. volume"]),2)
                 }
             ]
         data_for_frontend.append(formatted_data)
@@ -74,6 +73,7 @@ def portfolio_overview(userID):
 
 #Function with API request to AV
 def av_api(symbol):
+    #Requests daily series (100 past days). Symbol for specific stock,API key and response format as parameters 
     url = f"http://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={symbol}&apikey=5KFQLJAEXPPU6DJ9&outputsize=compact&datatype=json"
     response = requests.get(url)
     if response.status_code == 200:
