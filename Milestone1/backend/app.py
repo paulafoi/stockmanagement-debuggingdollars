@@ -5,19 +5,12 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
+
 @app.route('/')
 def api_root():
     return jsonify(message="Debugging Dollars API is running")
 
-@app.route("/<userID>")
-def stock_overview(userID):
-    user_data = user_database()
-    if userID not in user_data:
-        return jsonify({"error": "Invalid user ID. Please create an account <a href='/signup'> here </a>"}), 404
-    else: 
-        user_info = user_data.get(userID)
-    return jsonify(user_info)
-
+#API endpoint for stock details for specific symbol
 @app.route('/stockinfo/<symbol>')
 def stockinfo_for_symbol(symbol):
     # call function with API call to AV
@@ -43,31 +36,40 @@ def stockinfo_for_symbol(symbol):
 
     return jsonify(data_for_frontend)
 
-@app.route('/portfoliovalue/<userID>')
-def portfoliovalue(userID):
+#API endpoint to request portfolio overview and total value of portfolio
+@app.route('/<userID>')
+def portfolio_overview(userID):
     user_data = user_database()
     if userID not in user_data:
         return jsonify({"error": "Invalid user ID. Please create an account <a href='/signup'> here </a>"}), 404
     
     portfolio = user_data[userID]
     totalvalue = 0
-    symbol_values = {}
+    symbols = {}
 
-    for symbol,quantity in portfolio.items():
+    for symbol, quantity in portfolio.items():
         av_data = av_api(symbol)
         
         if not av_data:
             return jsonify({"error": "Failed to get data for symbol: " + symbol}), 500
-        # Convert the daily series to the desired list format for the frontend
-        data_for_frontend = [[date, data] for date, data in av_data.items()]
+        
         # The first element is the most recent
-        latest_closing_price = float(data_for_frontend[0][1]["4. close"])
-        value_for_symbol = latest_closing_price * quantity
-        symbol_values[symbol] = [value_for_symbol]
+        latest_closing_price = float(av_data[list(av_data.keys())[0]]["4. close"])
+        value_for_symbol = round(latest_closing_price * quantity,2)
         totalvalue += value_for_symbol
-    
-    return jsonify({"Total Portfolio Value": totalvalue, "Portfolio Compositon" : symbol_values})
 
+        # Directly assign the non-list values for quantity and value
+        symbols[symbol] = {"quantity": quantity, "value": value_for_symbol}
+        
+    totalvalue = round(totalvalue, 2)
+
+    response = {
+        "total_value": totalvalue,
+        "symbols": symbols
+    }
+    
+    # Return the total value and the symbol_values dictionary directly within a list
+    return jsonify(response)
 
 
 #Function with API request to AV
@@ -80,9 +82,7 @@ def av_api(symbol):
         daily_series = symbol_data.get("Time Series (Daily)", {})
         return daily_series
     else:
-        print(f"Failed to get data: {response.status_code}")
-
-
+        print(f"Failed to get AV data: {response.status_code}")
 
 def user_database():
     return { 
