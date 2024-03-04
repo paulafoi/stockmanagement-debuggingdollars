@@ -2,43 +2,51 @@ import React, { useState, useEffect } from "react";
 import Accordion from "react-bootstrap/Accordion";
 import { Container, Row, Col, Alert } from "react-bootstrap";
 import StockDetails from "./StockDetails";
-import { useParams } from "react-router-dom"; // Import useParams
 
 const PortfolioOverview = () => {
-  const [portfolio, setPortfolio] = useState({});
+  const [portfolio, setPortfolio] = useState({ symbols: {} }); // Initialize symbols as an empty object
+  const [totalValue, setTotalValue] = useState(0);
   const [error, setError] = useState("");
-  const { userId } = useParams(); // Use useParams to get userId from the URL
+  const userId = "user1";
 
   useEffect(() => {
     const fetchPortfolio = async () => {
       try {
         const response = await fetch(
-          `https://mcsbt-integration-paula.ew.r.appspot.com/${userId}`
+          `http://mcsbt-integration-paula.appspot.com/${userId}`
         );
         if (!response.ok) {
           throw new Error("Network response was not ok");
         }
         const data = await response.json();
-        setPortfolio(data);
+        setPortfolio({ symbols: data.symbols || {} });
+        setTotalValue(data.total_value || 0);
       } catch (error) {
         setError("Failed to fetch portfolio. Please try again later.");
       }
     };
 
     fetchPortfolio();
-  }, [userId]); // Add userId as a dependency to useEffect
+  }, []);
 
   const PortfolioAccordion = () => {
+    // Convert the symbols object into an array including the symbol names
+    const symbolsArray = Object.entries(portfolio.symbols).map(
+      ([symbol, details]) => ({
+        symbol,
+        ...details,
+      })
+    );
+
     return (
       <Accordion defaultActiveKey="0" flush>
-        {Object.entries(portfolio).map(([symbol, quantity], index) => (
-          <Accordion.Item eventKey={String(index)} key={symbol}>
+        {symbolsArray.map((stock, index) => (
+          <Accordion.Item eventKey={String(index)} key={stock.symbol}>
             <Accordion.Header>
-              {symbol}: {quantity} shares
+              {stock.symbol}: {stock.quantity} shares - Value: ${stock.value}
             </Accordion.Header>
             <Accordion.Body>
-              {/* Render StockDetails for each symbol */}
-              <StockDetails symbol={symbol} quantity={quantity} />
+              <StockDetails symbol={stock.symbol} details={stock} />
             </Accordion.Body>
           </Accordion.Item>
         ))}
@@ -50,12 +58,13 @@ const PortfolioOverview = () => {
     <Container>
       <Row className="mt-3">
         <Col>
-          <h2>Portfolio Overview</h2>
+          <h3>Portfolio Overview for {userId}</h3>
           {error && <Alert variant="danger">{error}</Alert>}
-          {Object.keys(portfolio).length > 0 ? (
+          <h5>Total Portfolio Value: ${totalValue}</h5>
+          {Object.keys(portfolio.symbols).length > 0 ? (
             <PortfolioAccordion />
           ) : (
-            !error && <p>Loading portfolio...</p> // Show loading state when there's no error and portfolio is empty
+            !error && <p>Loading portfolio...</p>
           )}
         </Col>
       </Row>
