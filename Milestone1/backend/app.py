@@ -1,6 +1,7 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 import requests
 from flask_cors import CORS
+import hashlib
 
 app = Flask(__name__)
 CORS(app)
@@ -28,7 +29,7 @@ def stockinfo_for_symbol(symbol):
                     "2. high": round(float(day_data["2. high"]),2),
                     "3. low": round(float(day_data["3. low"]),2),
                     "4. close": round(float(day_data["4. close"]),2),
-                    "5. volume": round(float(day_data["5. volume"]),2)
+                    "5. volume": int(day_data["5. volume"])
                 }
             ]
         data_for_frontend.append(formatted_data)
@@ -70,6 +71,22 @@ def portfolio_overview(userID):
     # Return the total value and the symbol_values dictionary directly within a list
     return jsonify(response)
 
+@app.route("/handleLogin", methods=["POST"])
+def handle_login():
+    user_data = user_database()
+    data = request.get_json()
+    username = data.get("userID")
+    password = data.get("password")
+    hashed_pw = hash_pw(password)
+    
+    try:
+        # Check if the username exists and the password matches
+        if username in user_data and hashed_pw == user_data[username]['password']:
+            return jsonify({"message": "Login successful"}), 200
+        else:
+            return jsonify({"message": "Username or Password incorrect"}), 403
+    except Exception as e:
+        return jsonify({"message": "Error with login: {}".format(str(e))}), 500
 
 #Function with API request to AV
 def av_api(symbol):
@@ -87,6 +104,8 @@ def av_api(symbol):
 def user_database():
     return { 
         'user1': { 
+            'password' : '053732a48431fa996461a7e54f96ff9cc85c8e02', 
+            'symbols': {
             'AAPL': 10, 
 
             'GOOGL': 5, 
@@ -94,6 +113,12 @@ def user_database():
             'AMZN': 3 
         }, 
     } 
+    }
+
+def hash_pw(string):
+    hash = hashlib.sha1()
+    hash.update(string.encode())
+    return hash.hexdigest()
 
 if __name__ == '__main__':
     app.run(debug=True)
