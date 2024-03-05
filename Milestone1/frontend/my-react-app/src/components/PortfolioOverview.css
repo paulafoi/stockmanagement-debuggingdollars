@@ -1,0 +1,30 @@
+.stock-item {
+  display: flex;
+  flex-direction: column;
+  background-color: #1c2a24;
+  color: #76b947;
+  padding: 10px 15px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.stock-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.7);
+}
+
+.stock-symbol {
+  font-weight: bold;
+}
+
+.stock-details {
+  font-size: smaller;
+}
+
+.select-stock-instruction {
+  font-size: smaller;
+  font-style: italic;
+}

@@ -1,0 +1,40 @@
+.stock-details-container {
+  background-color: #f0f5f1;
+  border-radius: 0.25rem;
+  padding: 1rem;
+  color: #343a40;
+  box-shadow: 0 2rem 2rem rgba(0, 0, 0, 0.1);
+}
+
+/* Style for the header of the stock details */
+.stock-details-header {
+  color: #76b947;
+  margin-bottom: 0.5rem;
+}
+
+/* Style for the table */
+.stock-table {
+  color: #343a40;
+  background-color: #e6efeb;
+  border-collapse: collapse;
+}
+
+/* Style for table headers */
+.stock-table thead th {
+  background-color: #1e2d27;
+  color: #e4e6eb;
+  border-bottom: 2px solid #8db596;
+}
+
+/* Enhance the look of the spinner */
+.spinner-border {
+  color: #76b947;
+}
+
+/* Style for error alerts */
+.alert-danger {
+  color: #fff;
+  background-color: #a94442;
+  border-color: #d9534f;
+  border-radius: 0.25rem;
+}

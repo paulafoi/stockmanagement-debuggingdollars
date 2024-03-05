@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from "react";
-import Accordion from "react-bootstrap/Accordion";
-import { Container, Row, Col, Alert } from "react-bootstrap";
+import { Container, Row, Col, Alert, Spinner } from "react-bootstrap";
 import StockDetails from "./StockDetails";
+import "bootstrap/dist/css/bootstrap.min.css"; // Keep this import here
+import "./PortfolioOverview.css";
 
 const PortfolioOverview = () => {
-  const [portfolio, setPortfolio] = useState({ symbols: {} }); // Initialize symbols as an empty object
+  const [portfolio, setPortfolio] = useState(null);
   const [totalValue, setTotalValue] = useState(0);
   const [error, setError] = useState("");
+  const [selectedStock, setSelectedStock] = useState(null);
   const userId = "user1";
 
   useEffect(() => {
@@ -19,7 +21,7 @@ const PortfolioOverview = () => {
           throw new Error("Network response was not ok");
         }
         const data = await response.json();
-        setPortfolio({ symbols: data.symbols || {} });
+        setPortfolio(data.symbols || {});
         setTotalValue(data.total_value || 0);
       } catch (error) {
         setError("Failed to fetch portfolio. Please try again later.");
@@ -29,43 +31,51 @@ const PortfolioOverview = () => {
     fetchPortfolio();
   }, []);
 
-  const PortfolioAccordion = () => {
-    // Convert the symbols object into an array including the symbol names
-    const symbolsArray = Object.entries(portfolio.symbols).map(
-      ([symbol, details]) => ({
-        symbol,
-        ...details,
-      })
-    );
-
-    return (
-      <Accordion defaultActiveKey="0" flush>
-        {symbolsArray.map((stock, index) => (
-          <Accordion.Item eventKey={String(index)} key={stock.symbol}>
-            <Accordion.Header>
-              {stock.symbol}: {stock.quantity} shares - Value: ${stock.value}
-            </Accordion.Header>
-            <Accordion.Body>
-              <StockDetails symbol={stock.symbol} details={stock} />
-            </Accordion.Body>
-          </Accordion.Item>
-        ))}
-      </Accordion>
-    );
+  const handleStockSelection = (symbol) => {
+    setSelectedStock(symbol);
   };
 
   return (
-    <Container>
-      <Row className="mt-3">
-        <Col>
-          <h3>Portfolio Overview for {userId}</h3>
-          {error && <Alert variant="danger">{error}</Alert>}
-          <h5>Total Portfolio Value: ${totalValue}</h5>
-          {Object.keys(portfolio.symbols).length > 0 ? (
-            <PortfolioAccordion />
+    <Container fluid className="portfolio-overview">
+      <Row>
+        <Col xs={12} className="app-header">
+          <h2>Portfolio Overview for {userId}</h2>
+          {portfolio ? (
+            <>
+              <h5>Total Portfolio Value: ${totalValue}</h5>
+              <p className="select-stock-instruction">
+                Select a stock to see details
+              </p>
+            </>
           ) : (
-            !error && <p>Loading portfolio...</p>
+            <Spinner animation="border" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </Spinner>
           )}
+        </Col>
+      </Row>
+      <Row>
+        <Col xs={4} className="sidebar">
+          {portfolio ? (
+            Object.entries(portfolio).map(([symbol, details]) => (
+              <div
+                className="stock-item"
+                key={symbol}
+                onClick={() => handleStockSelection(symbol)}
+              >
+                <span className="stock-symbol">{symbol}:</span>
+                <span className="stock-details">
+                  {details.quantity} shares - ${details.value} in total value
+                </span>
+              </div>
+            ))
+          ) : (
+            <div>Loading portfolio...</div>
+          )}
+        </Col>
+        <Col xs={8} className="main-content">
+          {error && <Alert variant="danger">{error}</Alert>}
+          {selectedStock && <StockDetails symbol={selectedStock} />}
         </Col>
       </Row>
     </Container>

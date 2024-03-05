@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Table, Container, Alert, Spinner } from "react-bootstrap";
+import "./StockDetails.css";
 
 const StockDetails = ({ symbol }) => {
   const [stockInfo, setStockInfo] = useState([]);
@@ -31,7 +32,7 @@ const StockDetails = ({ symbol }) => {
   }, [symbol]);
 
   return (
-    <Container>
+    <Container className="stock-details-container">
       {error && <Alert variant="danger">{error}</Alert>}
       {loading ? ( // Check if it's loading
         <div className="text-center">
@@ -42,8 +43,8 @@ const StockDetails = ({ symbol }) => {
       ) : (
         stockInfo.length > 0 && (
           <>
-            <h3>Stock Details for {symbol}</h3>
-            <Table striped bordered hover size="sm">
+            <h3 className="stock-details-header">Stock Details for {symbol}</h3>
+            <Table striped bordered hover size="sm" className="stock-table">
               <thead>
                 <tr>
                   <th>Date</th>
@@ -58,10 +59,10 @@ const StockDetails = ({ symbol }) => {
                 {stockInfo.map(([date, details], index) => (
                   <tr key={index}>
                     <td>{date}</td>
-                    <td>{details["1. open"]}</td>
-                    <td>{details["2. high"]}</td>
-                    <td>{details["3. low"]}</td>
-                    <td>{details["4. close"]}</td>
+                    <td>${details["1. open"]}</td>
+                    <td>${details["2. high"]}</td>
+                    <td>${details["3. low"]}</td>
+                    <td>${details["4. close"]}</td>
                     <td>{details["5. volume"]}</td>
                   </tr>
                 ))}
