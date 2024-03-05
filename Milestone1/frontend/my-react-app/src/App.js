@@ -1,9 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import { Container, Navbar } from "react-bootstrap";
 import PortfolioOverview from "./components/PortfolioOverview";
-import "./App.css"; // Import your app.css file
+import Login from "./components/LogIn";
+import "./App.css";
 
 const App = () => {
+  const [loginSuccessful, setLoginSuccessful] = useState(false);
+
   return (
     <>
       <Navbar className="navbar" variant="dark" expand="lg">
@@ -12,7 +15,11 @@ const App = () => {
         </Container>
       </Navbar>
       <Container className="main-content">
-        <PortfolioOverview />
+        {!loginSuccessful ? (
+          <Login setLoginSuccessful={setLoginSuccessful} />
+        ) : (
+          <PortfolioOverview />
+        )}
       </Container>
       <div className="footer">
         <Container>
