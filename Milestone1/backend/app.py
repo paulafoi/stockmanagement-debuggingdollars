@@ -1,10 +1,16 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, session, request
 import requests
 from flask_cors import CORS
 import hashlib
+import oracledb
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, supports_credentials=True)
+app.config["SECRET_KEY"] = "wRm$$4e&4E!"
+
+un = 'MYOWNSH'
+cs = '(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=adb.eu-madrid-1.oraclecloud.com))(connect_data=(service_name=g70802e41303b93_debuggingdollarsdb_low.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))'
+pw = 'sF3fh_z8phiqTOll'
 
 @app.route('/')
 def api_root():
@@ -73,25 +79,65 @@ def portfolio_overview(userID):
 
 @app.route("/handleLogin", methods=["POST"])
 def handle_login():
-    user_data = user_database()
     data = request.get_json()
-    username = data.get("userID")
-    password = data.get("password")
-    hashed_pw = hash_pw(password)
+    username = data.get("username")
+    password = hash_pw(data.get("password"))
     
-    try:
-        # Check if the username exists and the password matches
-        if username in user_data and hashed_pw == user_data[username]['password']:
-            return jsonify({"message": "Login successful"}), 200
-        else:
-            return jsonify({"message": "Username or Password incorrect"}), 403
+    try: 
+        with oracledb.connect(user=un, password=pw, dsn=cs) as connection:
+            with connection.cursor() as cursor:
+                #use parameters for more security
+                query_selectuser = f'select user_id, username from users WHERE username = :username AND password = :password'
+                cursor.execute(query_selectuser, [username, password])
+                user = cursor.fetchone()
+
+                if user:
+                    # access user information based on table structure
+                    session["username"] = user[0]
+                    session["user_id"] = user[1]
+                    return jsonify({"message": "Login successful"}), 200
+                else:
+                    return jsonify({"message": "Username or Password incorrect"}), 403
     except Exception as e:
         return jsonify({"message": "Error with login: {}".format(str(e))}), 500
+
+@app.route("/handleRegister", methods=["POST"])
+def handle_register():
+    data = request.get_json()
+    username = data.get("username")
+    password = hash_pw(data.get("password"))
+    
+    try: 
+        with oracledb.connect(user=un, password=pw, dsn=cs) as connection:
+            with connection.cursor() as cursor:
+                # Check if the user already exists
+                query_select_user = f"SELECT * FROM users WHERE username = :username"
+                cursor.execute(query_select_user, [username])
+                user = cursor.fetchone()
+
+                if user:
+                    return jsonify({"message": "Account already exists. Go to login"}), 403
+                else:
+                    # Insert new user
+                    query_insert_user = "INSERT INTO users (username, password) VALUES (:username, :password)"
+                    cursor.execute(query_insert_user, [username, password])
+                    connection.commit()  # Don't forget to commit the transaction
+                    
+                    return jsonify({"message": "Account created. Go to login."}), 200
+
+    except Exception as e:
+        return jsonify({"message": "Error with registration: {}".format(str(e))}), 500
+
+@app.route("/handleLogout", methods=["POST"])
+def logout():
+    session.clear()
+    return jsonify({"message": "Logged out."}), 200
+
 
 #Function with API request to AV
 def av_api(symbol):
     #Requests daily series (100 past days). Symbol for specific stock,API key and response format as parameters 
-    url = f"http://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={symbol}&apikey=5KFQLJAEXPPU6DJ9&outputsize=compact&datatype=json"
+    url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={symbol}&apikey=5KFQLJAEXPPU6DJ9&outputsize=compact&datatype=json"
     response = requests.get(url)
     if response.status_code == 200:
         symbol_data = response.json()
@@ -101,19 +147,6 @@ def av_api(symbol):
     else:
         print(f"Failed to get AV data: {response.status_code}")
 
-def user_database():
-    return { 
-        'user1': { 
-            'password' : '053732a48431fa996461a7e54f96ff9cc85c8e02', 
-            'symbols': {
-            'AAPL': 10, 
-
-            'GOOGL': 5, 
-
-            'AMZN': 3 
-        }, 
-    } 
-    }
 
 def hash_pw(string):
     hash = hashlib.sha1()
