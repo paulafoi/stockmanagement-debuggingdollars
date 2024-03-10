@@ -1,52 +1,46 @@
 import React, { useState } from "react";
 import { Button, Container, Form } from "react-bootstrap";
-import "bootstrap/dist/css/bootstrap.min.css";
 
-const Login = ({ setLoginSuccessful }) => {
+const Register = ({ setShowLogin, setRegistrationMessage }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLogin = async (e) => {
-    e.preventDefault(); // Prevent the default form submission behavior
+  const handleRegister = async (e) => {
+    e.preventDefault();
 
-    // Prepare the data to be sent
-    const loginData = {
+    const registerData = {
       username: username,
       password: password,
     };
 
     try {
-      // Send a POST request to the backend
       const response = await fetch(
-        "http://mcsbt-integration-paula.ew.r.appspot.com/handleLogin",
+        "http://mcsbt-integration-paula.ew.r.appspot.com/handleRegister",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(loginData),
-          credentials: "include", // for setting session-cookie in browser
+          body: JSON.stringify(registerData),
         }
       );
 
-      // Assuming the response is JSON
       const data = await response.json();
 
       if (response.ok) {
-        // If login is successful
-        setLoginSuccessful(true);
+        setRegistrationMessage(data.message); // Show registration success message
+        setShowLogin(true); // Switch back to the login form
       } else {
-        alert("Login failed: " + data.message);
+        alert("Registration failed: " + data.message);
       }
     } catch (error) {
-      console.error("Login request failed", error);
-      alert("Login request failed");
+      alert("Registration request failed");
     }
   };
 
   return (
     <Container width="20px">
-      <Form onSubmit={handleLogin}>
+      <Form onSubmit={handleRegister}>
         <Form.Group>
           <Form.Label>Username</Form.Label>
           <Form.Control
@@ -65,12 +59,12 @@ const Login = ({ setLoginSuccessful }) => {
             onChange={(e) => setPassword(e.target.value)}
           />
         </Form.Group>
-        <Button variant="primary" type="submit" className="btn btn-success">
-          Submit
+        <Button variant="primary" type="submit">
+          Register
         </Button>
       </Form>
     </Container>
   );
 };
 
-export default Login;
+export default Register;

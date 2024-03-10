@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Alert, Spinner } from "react-bootstrap";
 import StockDetails from "./StockDetails";
-import "bootstrap/dist/css/bootstrap.min.css"; // Keep this import here
+import "bootstrap/dist/css/bootstrap.min.css";
 import "./PortfolioOverview.css";
 
 const PortfolioOverview = () => {

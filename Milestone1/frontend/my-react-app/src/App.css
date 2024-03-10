@@ -23,3 +23,9 @@
   padding-top: 20px; /* Add space above */
   padding-bottom: 20px; /* Add space below */
 }
+
+.button {
+  background-color: #76b947;
+  border-color: #1c2a24;
+  color: #1c2a24;
+}
