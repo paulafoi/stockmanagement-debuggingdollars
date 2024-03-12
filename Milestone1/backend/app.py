@@ -62,7 +62,7 @@ def stockinfo_for_symbol(symbol):
 #API endpoint to request portfolio overview and total value of portfolio
 @app.route('/<userID>')
 def portfolio_overview(userID):
-    portfolio= USER_STOCKS.query.filter_by(UserId = userID).all()
+    portfolio= USER_STOCKS.query.filter_by(USERID = userID).all()
     
     if not portfolio:
         return jsonify({"error": "No stocks found for the user"}), 404
@@ -104,12 +104,12 @@ def handle_login():
     
     try: 
         #use parameters for more security
-        user = USERS.query.filter_by(UserName = username , Password = password).first()
+        user = USERS.query.filter_by(USERNAME = username , PASSWORD = password).first()
 
         if user:
             # access user information based on table structure
-            username = user.UserName
-            session["user_id"] = user.UserId
+            username = user.USERNAME
+            session["user_id"] = user.USERID
             return jsonify({"message": "Login successful"}), 200
         else:
             return jsonify({"message": "Username or Password incorrect"}), 403
@@ -124,13 +124,13 @@ def handle_register():
     
     try: 
         # Check if the user already exists
-        user = USERS.query.filter_by(UserName = username).first()
+        user = USERS.query.filter_by(USERNAME = username).first()
         
         if user:
             return jsonify({"message": "Account already exists. Go to login"}), 403
         else:
             # Insert new user
-            new_user = USERS(UserName=username, Password = password)
+            new_user = USERS(USERNAME=username, PASSWORD = password)
             db.session.add(new_user)
             db.session.commit()
             return jsonify({"message": "Account created. Go to login."}), 200
@@ -156,16 +156,16 @@ def remove_or_update_stock():
 
     try:
         # Check if the stock already exists in the portfolio
-        stock = USER_STOCKS.query.filter_by(UserId=user_id, StockSymbol=stock_symbol).first()
+        stock = USER_STOCKS.query.filter_by(USERID=user_id, STOCKSYMBOL=stock_symbol).first()
 
         if stock:
             # Check if the quantity to remove is less than or equal to the current stock quantity
             if quantity_to_remove <= stock.Quantity:
                 # Update the stock quantity
-                stock.Quantity -= quantity_to_remove
+                stock.QUANTITY -= quantity_to_remove
 
                 # If the new quantity is 0, remove the stock entry
-                if stock.Quantity <= 0:
+                if stock.QUANTITY <= 0:
                     db.session.delete(stock)
                     db.session.commit()
                     return jsonify({"message": "Stock removed from portfolio"}), 200
@@ -197,16 +197,15 @@ def add_or_update_stock():
 
     try:
         # Check if the stock already exists in the portfolio
-        stock= USER_STOCKS.query.filter_by(UserId = user_id, StockSymbol = stock_symbol).first()
+        stock= USER_STOCKS.query.filter_by(USERID = user_id, STOCKSYMBOL = stock_symbol).first()
 
         if stock:
             # Stock already exists, update the quantity
-            new_quantity = stock["Quantity"] + quantity
-            stock.Quantity += new_quantity
+            stock.Quantity += quantity
             db.session.commit()
         else:
         # Stock does not exist, insert a new entry
-            new_stock = USER_STOCKS(UserId = user_id, StockSymbol = stock_symbol, Quantity = quantity)
+            new_stock = USER_STOCKS(USERID = user_id, STOCKSYMBOL = stock_symbol, QUANTITY = quantity)
             db.session.add(new_stock)
             db.session.commit()
             return jsonify({"message": "Portfolio updated successfully"}), 200
