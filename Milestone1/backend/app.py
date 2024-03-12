@@ -213,6 +213,55 @@ def add_or_update_stock():
     except Exception as e:
         return jsonify({"message": "Error updating portfolio: {}".format(str(e))}), 500
 
+@app.route("/modifyPortfolio/<userID>", methods = ["POST"])
+def modify_portfolio(userID):
+    data = request.get_json()
+    stock_symbol = data.get('stock_symbol').upper().replace(" ","") 
+    quantity = int(data.get('quantity'))
+    operation = data.get('operation')
+
+    user_id = userID
+    if not user_id:
+        return jsonify({"message": "User is not logged in"}), 401
+
+    if not av_api(stock_symbol):
+        return jsonify({"message": "Invalid stock symbol"}), 400
+    
+    try:
+        # Check if the stock already exists in the portfolio
+        stock = USER_STOCKS.query.filter_by(USERID=user_id, STOCKSYMBOL=stock_symbol).first()
+
+        if operation.upper() == "ADD":
+            if stock:
+                # Stock already exists, update the quantity
+                stock.QUANTITY += quantity
+            else:
+                # Stock does not exist, insert a new entry
+                stock = USER_STOCKS(USERID=user_id, STOCKSYMBOL=stock_symbol, QUANTITY=quantity)
+                db.session.add(stock)
+        elif operation.upper() == "REMOVE":
+            if stock:
+                # Check if the quantity to remove is less than or equal to the current stock quantity
+                if quantity <= stock.QUANTITY:
+                    stock.QUANTITY -= quantity
+                    # If the new quantity is 0, remove the stock entry
+                    if stock.QUANTITY == 0:
+                        db.session.delete(stock)
+                else:
+                    # Trying to remove more stock than is available
+                    return jsonify({"message": "Requested quantity exceeds stocks in portfolio"}), 400
+            else:
+                # Stock does not exist in the user's portfolio
+                return jsonify({"message": "Stock not found in portfolio"}), 404
+        else:
+            return jsonify({"message": "Invalid operation"}), 400
+
+        db.session.commit()
+        return jsonify({"message": "Portfolio updated successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"message": "Error updating portfolio: {}".format(str(e))}), 500
+
 #Function with API request to AV
 def av_api(symbol):
     #Requests daily series (100 past days). Symbol for specific stock,API key and response format as parameters 
@@ -224,7 +273,7 @@ def av_api(symbol):
         daily_series = symbol_data.get("Time Series (Daily)", {})
         return daily_series
     else:
-        print(f"Failed to get AV data: {response.status_code}")
+        return False
 
 
 def hash_pw(string):
