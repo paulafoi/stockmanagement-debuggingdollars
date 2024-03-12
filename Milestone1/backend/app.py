@@ -2,15 +2,32 @@ from flask import Flask, jsonify, session, request
 import requests
 from flask_cors import CORS
 import hashlib
+from models import db, USERS, USER_STOCKS
+from sqlalchemy.pool import NullPool
 import oracledb
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
 app.config["SECRET_KEY"] = "wRm$$4e&4E!"
 
-un = 'MYOWNSH'
-cs = '(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=adb.eu-madrid-1.oraclecloud.com))(connect_data=(service_name=g70802e41303b93_debuggingdollarsdb_low.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))'
-pw = 'sF3fh_z8phiqTOll'
+un = 'ADMIN'
+pw = '.5wBPW3qSwJuWC!'
+dsn = '(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=adb.eu-madrid-1.oraclecloud.com))(connect_data=(service_name=g70802e41303b93_debuggingdollarsdatabase_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))'
+
+pool = oracledb.create_pool(user=un, password=pw,
+                            dsn=dsn)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = 'oracle+oracledb://'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'creator': pool.acquire,
+    'poolclass': NullPool
+}
+app.config['SQLALCHEMY_ECHO'] = True
+db.init_app(app)
+
+with app.app_context():
+    db.create_all()
 
 @app.route('/')
 def api_root():
@@ -45,15 +62,17 @@ def stockinfo_for_symbol(symbol):
 #API endpoint to request portfolio overview and total value of portfolio
 @app.route('/<userID>')
 def portfolio_overview(userID):
-    user_data = user_database()
-    if userID not in user_data:
-        return jsonify({"error": "Invalid user ID. Please create an account <a href='/signup'> here </a>"}), 404
+    portfolio= USER_STOCKS.query.filter_by(UserId = userID).all()
     
-    portfolio = user_data[userID]
+    if not portfolio:
+        return jsonify({"error": "No stocks found for the user"}), 404
+
     totalvalue = 0
     symbols = {}
 
-    for symbol, quantity in portfolio.items():
+    for stock in portfolio:
+        symbol = portfolio.StockSymbol
+        quantity = portfolio.Quantity
         av_data = av_api(symbol)
         
         if not av_data:
@@ -84,20 +103,16 @@ def handle_login():
     password = hash_pw(data.get("password"))
     
     try: 
-        with oracledb.connect(user=un, password=pw, dsn=cs) as connection:
-            with connection.cursor() as cursor:
-                #use parameters for more security
-                query_selectuser = f'select user_id, username from users WHERE username = :username AND password = :password'
-                cursor.execute(query_selectuser, [username, password])
-                user = cursor.fetchone()
+        #use parameters for more security
+        user = USERS.query.filter_by(UserName = username , Password = password).first()
 
-                if user:
-                    # access user information based on table structure
-                    session["username"] = user[0]
-                    session["user_id"] = user[1]
-                    return jsonify({"message": "Login successful"}), 200
-                else:
-                    return jsonify({"message": "Username or Password incorrect"}), 403
+        if user:
+            # access user information based on table structure
+            username = user.UserName
+            session["user_id"] = user.UserId
+            return jsonify({"message": "Login successful"}), 200
+        else:
+            return jsonify({"message": "Username or Password incorrect"}), 403
     except Exception as e:
         return jsonify({"message": "Error with login: {}".format(str(e))}), 500
 
@@ -108,22 +123,17 @@ def handle_register():
     password = hash_pw(data.get("password"))
     
     try: 
-        with oracledb.connect(user=un, password=pw, dsn=cs) as connection:
-            with connection.cursor() as cursor:
-                # Check if the user already exists
-                query_select_user = f"SELECT * FROM users WHERE username = :username"
-                cursor.execute(query_select_user, [username])
-                user = cursor.fetchone()
-
-                if user:
-                    return jsonify({"message": "Account already exists. Go to login"}), 403
-                else:
-                    # Insert new user
-                    query_insert_user = "INSERT INTO users (username, password) VALUES (:username, :password)"
-                    cursor.execute(query_insert_user, [username, password])
-                    connection.commit()  # Don't forget to commit the transaction
-                    
-                    return jsonify({"message": "Account created. Go to login."}), 200
+        # Check if the user already exists
+        user = USERS.query.filter_by(UserName = username).first()
+        
+        if user:
+            return jsonify({"message": "Account already exists. Go to login"}), 403
+        else:
+            # Insert new user
+            new_user = USERS(UserName=username, Password = password)
+            db.session.add(new_user)
+            db.session.commit()
+            return jsonify({"message": "Account created. Go to login."}), 200
 
     except Exception as e:
         return jsonify({"message": "Error with registration: {}".format(str(e))}), 500
@@ -133,6 +143,76 @@ def logout():
     session.clear()
     return jsonify({"message": "Logged out."}), 200
 
+@app.route('/removeStock', methods=['POST'])
+def remove_or_update_stock():
+    data = request.get_json()
+    stock_symbol = data.get('stock_symbol')
+    quantity_to_remove = int(data.get('quantity'))
+
+    # for testing purposes
+    user_id = 2
+    if not user_id:
+        return jsonify({"message": "User is not logged in"}), 401
+
+    try:
+        # Check if the stock already exists in the portfolio
+        stock = USER_STOCKS.query.filter_by(UserId=user_id, StockSymbol=stock_symbol).first()
+
+        if stock:
+            # Check if the quantity to remove is less than or equal to the current stock quantity
+            if quantity_to_remove <= stock.Quantity:
+                # Update the stock quantity
+                stock.Quantity -= quantity_to_remove
+
+                # If the new quantity is 0, remove the stock entry
+                if stock.Quantity <= 0:
+                    db.session.delete(stock)
+                    db.session.commit()
+                    return jsonify({"message": "Stock removed from portfolio"}), 200
+                else:
+                    db.session.commit()
+                    return jsonify({"message": "Stock quantity updated successfully"}), 200
+            else:
+                # Trying to remove more stock than is available
+                db.session.delete(stock)  # Removing the stock entry as per requirements
+                db.session.commit()
+                return jsonify({"message": "Requested quantity exceeds stock in portfolio. Stock removed."}), 400
+        else:
+            # Stock does not exist in the user's portfolio
+            return jsonify({"message": "Stock not found in portfolio"}), 404
+
+    except Exception as e:
+        return jsonify({"message": "Error updating portfolio: {}".format(str(e))}), 500
+
+@app.route('/addStock', methods=['POST'])
+def add_or_update_stock():
+    data = request.get_json()
+    stock_symbol = data.get('stock_symbol')
+    quantity = int(data.get('quantity'))
+
+    # for testing purposes
+    user_id = 2
+    if not user_id:
+        return jsonify({"message": "User is not logged in"}), 401
+
+    try:
+        # Check if the stock already exists in the portfolio
+        stock= USER_STOCKS.query.filter_by(UserId = user_id, StockSymbol = stock_symbol).first()
+
+        if stock:
+            # Stock already exists, update the quantity
+            new_quantity = stock["Quantity"] + quantity
+            stock.Quantity += new_quantity
+            db.session.commit()
+        else:
+        # Stock does not exist, insert a new entry
+            new_stock = USER_STOCKS(UserId = user_id, StockSymbol = stock_symbol, Quantity = quantity)
+            db.session.add(new_stock)
+            db.session.commit()
+            return jsonify({"message": "Portfolio updated successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"message": "Error updating portfolio: {}".format(str(e))}), 500
 
 #Function with API request to AV
 def av_api(symbol):

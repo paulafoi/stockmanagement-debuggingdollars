@@ -29,3 +29,6 @@
 # Ignored by the build system
 
 /setup.cfg
+myenv/
+models.py
+oracletest.py
