@@ -45,7 +45,9 @@ const Login = ({ setLoginSuccessful }) => {
   };
 
   return (
-    <Container width="20px">
+    <Container width="10px">
+      <h2>Log In</h2>
+      <p>Please enter your login details below</p>
       <Form onSubmit={handleLogin}>
         <Form.Group>
           <Form.Label>Username</Form.Label>

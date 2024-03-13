@@ -39,8 +39,10 @@ const Register = ({ setShowLogin, setRegistrationMessage }) => {
   };
 
   return (
-    <Container width="20px">
-      <Form onSubmit={handleRegister}>
+    <Container width="5px">
+      <h2>Register</h2>
+      <p>Please create your account below.</p>
+      <Form width="5px" onSubmit={handleRegister}>
         <Form.Group>
           <Form.Label>Username</Form.Label>
           <Form.Control

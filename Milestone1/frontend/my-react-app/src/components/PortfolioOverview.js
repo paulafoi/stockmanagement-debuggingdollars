@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Alert, Spinner } from "react-bootstrap";
 import StockDetails from "./StockDetails";
+import ModifyPortfolio from "./ModifyPortfolio";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./PortfolioOverview.css";
 
@@ -9,13 +10,16 @@ const PortfolioOverview = () => {
   const [totalValue, setTotalValue] = useState(0);
   const [error, setError] = useState("");
   const [selectedStock, setSelectedStock] = useState(null);
-  const userId = "user1";
+  const userId = 21;
 
   useEffect(() => {
     const fetchPortfolio = async () => {
       try {
         const response = await fetch(
-          `http://mcsbt-integration-paula.appspot.com/${userId}`
+          `http://mcsbt-integration-paula.appspot.com/overview`,
+          {
+            credentials: "include",
+          }
         );
         if (!response.ok) {
           throw new Error("Network response was not ok");
@@ -43,7 +47,8 @@ const PortfolioOverview = () => {
           {portfolio ? (
             <>
               <h5>Total Portfolio Value: ${totalValue}</h5>
-              <p className="select-stock-instruction">
+              <ModifyPortfolio />
+              <p className="select-stock-instruction" style={{ clear: "both" }}>
                 Select a stock to see details
               </p>
             </>

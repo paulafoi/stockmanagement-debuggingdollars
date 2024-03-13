@@ -5,7 +5,7 @@
 
 .footer {
   background-color: #f8f9fa;
-  position: absolute;
+  position: sticky;
   bottom: 0;
   width: 100%;
   line-height: 60px;

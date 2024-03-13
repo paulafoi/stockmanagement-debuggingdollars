@@ -1,14 +1,21 @@
-from flask import Flask, jsonify, session, request
+from flask import Flask, jsonify, session, request, redirect
 import requests
 from flask_cors import CORS
 import hashlib
 from models import db, USERS, USER_STOCKS
 from sqlalchemy.pool import NullPool
 import oracledb
+from datetime import timedelta
+import logging
 
 app = Flask(__name__)
-CORS(app, supports_credentials=True)
+CORS(app, origins=["http://localhost:3000"], supports_credentials=True)
 app.config["SECRET_KEY"] = "wRm$$4e&4E!"
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=3)
+app.config["SESSION_COOKIE_NAME"] = "debuggindollars_session"
+app.config["REMEMBER_COOKIE_DURATION"] = timedelta(days=3)
+app.config['SESSION_COOKIE_PATH'] = '/'
+app.config['SESSION_COOKIE_SECURE'] = False
 
 un = 'ADMIN'
 pw = '.5wBPW3qSwJuWC!'
@@ -60,8 +67,9 @@ def stockinfo_for_symbol(symbol):
     return jsonify(data_for_frontend)
 
 #API endpoint to request portfolio overview and total value of portfolio
-@app.route('/<userID>')
-def portfolio_overview(userID):
+@app.route('/overview')
+def portfolio_overview():
+    userID = 21
     portfolio= USER_STOCKS.query.filter_by(USERID = userID).all()
     
     if not portfolio:
@@ -71,8 +79,8 @@ def portfolio_overview(userID):
     symbols = {}
 
     for stock in portfolio:
-        symbol = portfolio.StockSymbol
-        quantity = portfolio.Quantity
+        symbol = stock.STOCKSYMBOL
+        quantity = stock.QUANTITY
         av_data = av_api(symbol)
         
         if not av_data:
@@ -107,9 +115,12 @@ def handle_login():
         user = USERS.query.filter_by(USERNAME = username , PASSWORD = password).first()
 
         if user:
-            # access user information based on table structure
-            username = user.USERNAME
-            session["user_id"] = user.USERID
+            #set session cookie to permanent
+            session.permanent = True 
+            session.modified = True 
+            session["username"] = user.USERNAME
+            session["userID"] = user.USERID
+            logging.debug("User %s logged in, session: %s", user.USERNAME, session)
             return jsonify({"message": "Login successful"}), 200
         else:
             return jsonify({"message": "Username or Password incorrect"}), 403
@@ -143,85 +154,15 @@ def logout():
     session.clear()
     return jsonify({"message": "Logged out."}), 200
 
-@app.route('/removeStock', methods=['POST'])
-def remove_or_update_stock():
-    data = request.get_json()
-    stock_symbol = data.get('stock_symbol')
-    quantity_to_remove = int(data.get('quantity'))
-
-    # for testing purposes
-    user_id = 2
-    if not user_id:
-        return jsonify({"message": "User is not logged in"}), 401
-
-    try:
-        # Check if the stock already exists in the portfolio
-        stock = USER_STOCKS.query.filter_by(USERID=user_id, STOCKSYMBOL=stock_symbol).first()
-
-        if stock:
-            # Check if the quantity to remove is less than or equal to the current stock quantity
-            if quantity_to_remove <= stock.Quantity:
-                # Update the stock quantity
-                stock.QUANTITY -= quantity_to_remove
-
-                # If the new quantity is 0, remove the stock entry
-                if stock.QUANTITY <= 0:
-                    db.session.delete(stock)
-                    db.session.commit()
-                    return jsonify({"message": "Stock removed from portfolio"}), 200
-                else:
-                    db.session.commit()
-                    return jsonify({"message": "Stock quantity updated successfully"}), 200
-            else:
-                # Trying to remove more stock than is available
-                db.session.delete(stock)  # Removing the stock entry as per requirements
-                db.session.commit()
-                return jsonify({"message": "Requested quantity exceeds stock in portfolio. Stock removed."}), 400
-        else:
-            # Stock does not exist in the user's portfolio
-            return jsonify({"message": "Stock not found in portfolio"}), 404
-
-    except Exception as e:
-        return jsonify({"message": "Error updating portfolio: {}".format(str(e))}), 500
-
-@app.route('/addStock', methods=['POST'])
-def add_or_update_stock():
-    data = request.get_json()
-    stock_symbol = data.get('stock_symbol')
-    quantity = int(data.get('quantity'))
-
-    # for testing purposes
-    user_id = 2
-    if not user_id:
-        return jsonify({"message": "User is not logged in"}), 401
-
-    try:
-        # Check if the stock already exists in the portfolio
-        stock= USER_STOCKS.query.filter_by(USERID = user_id, STOCKSYMBOL = stock_symbol).first()
-
-        if stock:
-            # Stock already exists, update the quantity
-            stock.Quantity += quantity
-            db.session.commit()
-        else:
-        # Stock does not exist, insert a new entry
-            new_stock = USER_STOCKS(USERID = user_id, STOCKSYMBOL = stock_symbol, QUANTITY = quantity)
-            db.session.add(new_stock)
-            db.session.commit()
-            return jsonify({"message": "Portfolio updated successfully"}), 200
-
-    except Exception as e:
-        return jsonify({"message": "Error updating portfolio: {}".format(str(e))}), 500
-
-@app.route("/modifyPortfolio/<userID>", methods = ["POST"])
-def modify_portfolio(userID):
+@app.route("/modifyPortfolio", methods = ["POST"])
+def modify_portfolio():
+    userID = 21
     data = request.get_json()
     stock_symbol = data.get('stock_symbol').upper().replace(" ","") 
     quantity = int(data.get('quantity'))
     operation = data.get('operation')
 
-    user_id = userID
-    if not user_id:
+    if not userID:
         return jsonify({"message": "User is not logged in"}), 401
 
     if not av_api(stock_symbol):
@@ -229,7 +170,7 @@ def modify_portfolio(userID):
     
     try:
         # Check if the stock already exists in the portfolio
-        stock = USER_STOCKS.query.filter_by(USERID=user_id, STOCKSYMBOL=stock_symbol).first()
+        stock = USER_STOCKS.query.filter_by(USERID=userID, STOCKSYMBOL=stock_symbol).first()
 
         if operation.upper() == "ADD":
             if stock:
@@ -237,7 +178,7 @@ def modify_portfolio(userID):
                 stock.QUANTITY += quantity
             else:
                 # Stock does not exist, insert a new entry
-                stock = USER_STOCKS(USERID=user_id, STOCKSYMBOL=stock_symbol, QUANTITY=quantity)
+                stock = USER_STOCKS(USERID=userID, STOCKSYMBOL=stock_symbol, QUANTITY=quantity)
                 db.session.add(stock)
         elif operation.upper() == "REMOVE":
             if stock:
@@ -257,7 +198,7 @@ def modify_portfolio(userID):
             return jsonify({"message": "Invalid operation"}), 400
 
         db.session.commit()
-        return jsonify({"message": "Portfolio updated successfully"}), 200
+        return redirect("http://localhost:3000")
 
     except Exception as e:
         return jsonify({"message": "Error updating portfolio: {}".format(str(e))}), 500
@@ -274,6 +215,16 @@ def av_api(symbol):
         return daily_series
     else:
         return False
+
+@app.route("/verifySession", methods=["GET"])
+def verify_session():
+    user_id = session.get("userID")
+    logging.debug("Verifying session, userID: %s", user_id)
+    if user_id:
+        return jsonify(isLoggedIn=True, userID=user_id)
+    else:
+        return jsonify(isLoggedIn=False), 401
+
 
 
 def hash_pw(string):

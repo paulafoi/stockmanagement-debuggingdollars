@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Container, Navbar, Nav, Button } from "react-bootstrap";
 import PortfolioOverview from "./components/PortfolioOverview";
 import Login from "./components/LogIn";
@@ -10,11 +10,25 @@ const App = () => {
   const [showLogin, setShowLogin] = useState(true);
   const [registrationMessage, setRegistrationMessage] = useState("");
 
-  //manage switch btw login and registration
-  const toggleForm = () => {
-    setShowLogin(!showLogin);
-    setRegistrationMessage("");
-  };
+  useEffect(() => {
+    // Check session when app loads
+    const verifySession = async () => {
+      try {
+        const response = await fetch(
+          "http://mcsbt-integration-paula.ew.r.appspot.com/verifySession",
+          { credentials: "include" }
+        );
+        if (response.ok) {
+          // If the session is valid, log the user in
+          setLoginSuccessful(true);
+        }
+      } catch (error) {
+        console.error("Session verification failed:", error);
+      }
+    };
+
+    verifySession();
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -25,17 +39,24 @@ const App = () => {
           credentials: "include",
         }
       );
-      const data = await response.json();
-
       if (response.ok) {
+        // If the logout is successful, log the user out
         setLoginSuccessful(false);
-        document.cookie = "session=; Max-Age=0";
+        // Clear the cookie if it's not httpOnly
+        document.cookie =
+          "debuggindollars_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
       } else {
+        const data = await response.json();
         alert("Logout failed: " + data.message);
       }
     } catch (error) {
       alert("Logout request failed");
     }
+  };
+
+  const toggleForm = () => {
+    setShowLogin(!showLogin);
+    setRegistrationMessage("");
   };
 
   return (
