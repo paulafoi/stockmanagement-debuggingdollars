@@ -9,7 +9,11 @@ from datetime import timedelta
 import logging
 
 app = Flask(__name__)
-CORS(app, origins=["http://localhost:3000"], supports_credentials=True)
+CORS(app, origins=[
+    "http://localhost:3000",
+    "http://debuggingdollars.storage.googleapis.com",
+    "https://debuggingdollars.storage.googleapis.com"  
+], supports_credentials=True)
 app.config["SECRET_KEY"] = "wRm$$4e&4E!"
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=3)
 app.config["SESSION_COOKIE_NAME"] = "debuggindollars_session"
@@ -198,7 +202,7 @@ def modify_portfolio():
             return jsonify({"message": "Invalid operation"}), 400
 
         db.session.commit()
-        return redirect("http://localhost:3000")
+        return jsonify({"message": "Portfolio updated successfully"}), 200
 
     except Exception as e:
         return jsonify({"message": "Error updating portfolio: {}".format(str(e))}), 500
