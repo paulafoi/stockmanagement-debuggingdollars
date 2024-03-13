@@ -12,7 +12,10 @@ const StockDetails = ({ symbol }) => {
     const fetchStockInfo = async () => {
       try {
         const response = await fetch(
-          `http://mcsbt-integration-paula.appspot.com/stockinfo/${symbol}`
+          `http://mcsbt-integration-paula.appspot.com/stockinfo/${symbol}`,
+          {
+            credentials: "include",
+          }
         );
         if (!response.ok) {
           throw new Error("Network response was not ok");

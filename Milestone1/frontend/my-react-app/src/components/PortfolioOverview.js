@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Container, Row, Col, Alert, Spinner } from "react-bootstrap";
 import StockDetails from "./StockDetails";
 import ModifyPortfolio from "./ModifyPortfolio";
@@ -10,30 +10,30 @@ const PortfolioOverview = () => {
   const [totalValue, setTotalValue] = useState(0);
   const [error, setError] = useState("");
   const [selectedStock, setSelectedStock] = useState(null);
-  const userId = 21;
 
-  useEffect(() => {
-    const fetchPortfolio = async () => {
-      try {
-        const response = await fetch(
-          `http://mcsbt-integration-paula.appspot.com/overview`,
-          {
-            credentials: "include",
-          }
-        );
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
+  const fetchPortfolio = useCallback(async () => {
+    try {
+      const response = await fetch(
+        `http://mcsbt-integration-paula.ew.r.appspot.com//overview`,
+        {
+          credentials: "include",
         }
-        const data = await response.json();
-        setPortfolio(data.symbols || {});
-        setTotalValue(data.total_value || 0);
-      } catch (error) {
-        setError("Failed to fetch portfolio. Please try again later.");
+      );
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
       }
-    };
+      const data = await response.json();
+      setPortfolio(data.symbols || {});
+      setTotalValue(data.total_value || 0);
+    } catch (error) {
+      setError("Failed to fetch portfolio. Please try again later.");
+    }
+  }, []); // Empty array means this callback will only be created once on mount
 
+  // useEffect to call fetchPortfolio when the component mounts
+  useEffect(() => {
     fetchPortfolio();
-  }, []);
+  }, [fetchPortfolio]); // fetchPortfolio is a dependency of this effect
 
   const handleStockSelection = (symbol) => {
     setSelectedStock(symbol);
@@ -43,11 +43,11 @@ const PortfolioOverview = () => {
     <Container fluid className="portfolio-overview">
       <Row>
         <Col xs={12} className="app-header">
-          <h2>Portfolio Overview for {userId}</h2>
+          <h2>Portfolio Overview</h2>
           {portfolio ? (
             <>
               <h5>Total Portfolio Value: ${totalValue}</h5>
-              <ModifyPortfolio />
+              <ModifyPortfolio onPortfolioChange={fetchPortfolio} />
               <p className="select-stock-instruction" style={{ clear: "both" }}>
                 Select a stock to see details
               </p>
@@ -61,7 +61,7 @@ const PortfolioOverview = () => {
       </Row>
       <Row>
         <Col xs={4} className="sidebar">
-          {portfolio ? (
+          {portfolio &&
             Object.entries(portfolio).map(([symbol, details]) => (
               <div
                 className="stock-item"
@@ -73,10 +73,7 @@ const PortfolioOverview = () => {
                   {details.quantity} shares - ${details.value} in total value
                 </span>
               </div>
-            ))
-          ) : (
-            <div>Loading portfolio...</div>
-          )}
+            ))}
         </Col>
         <Col xs={8} className="main-content">
           {error && <Alert variant="danger">{error}</Alert>}

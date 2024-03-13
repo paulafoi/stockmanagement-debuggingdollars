@@ -1,17 +1,20 @@
 import React, { useState } from "react";
-import { Alert, Form, Button, Container } from "react-bootstrap";
+import { Form, Button, Container, Modal } from "react-bootstrap";
 
-const ModifyPortfolio = () => {
+const ModifyPortfolio = ({ onPortfolioChange }) => {
   const [stockSymbol, setStockSymbol] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [operation, setOperation] = useState("");
   const [message, setMessage] = useState("");
+  const [showModal, setShowModal] = useState(false); // State to control modal visibility
 
   const handleModifyPortfolio = async (e) => {
     e.preventDefault();
+    let data;
+    setShowModal(false); // Ensure modal is not shown initially
     try {
       const response = await fetch(
-        `http://mcsbt-integration-paula.appspot.com/modifyPortfolio`,
+        `http://mcsbt-integration-paula.ew.r.appspot.com/modifyPortfolio`,
         {
           method: "POST",
           headers: {
@@ -25,22 +28,23 @@ const ModifyPortfolio = () => {
           credentials: "include",
         }
       );
+      data = await response.json();
 
       if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-
-      // Check for a redirect in the response
-      if (response.redirected) {
-        window.location.href = response.url; // This will cause the page to reload to the given URL
-      } else {
-        const data = await response.json();
-        setMessage(data.message);
-        // Optionally, force a reload if you need to re-fetch any data
-        window.location.reload();
+        throw new Error(data.message || "Network response was not ok");
       }
     } catch (error) {
-      setMessage("Failed to modify portfolio. Please try again.");
+      setMessage(error.message || `Failed to modify portfolio.`);
+      setShowModal(true); // Show modal on error
+      return;
+    }
+    setMessage(data.message);
+    setShowModal(true); // Show modal on success
+
+    try {
+      onPortfolioChange();
+    } catch (error) {
+      console.error("Failed to update portfolio overview:", error);
     }
   };
 
@@ -48,35 +52,40 @@ const ModifyPortfolio = () => {
     <Container
       className="mb-5"
       style={{
-        width: "60%",
+        width: "80%",
         backgroundColor: "#e8f5e9",
         float: "left",
-        padding: "0.5rem",
+        padding: "20px",
       }}
     >
       <Form onSubmit={handleModifyPortfolio}>
         <div
           style={{
             display: "flex",
-            marginBottom: "1.5rem",
+            marginBottom: "1rem",
             alignItems: "center",
           }}
         >
-          <div style={{ flex: 1, marginRight: "20px" }}>
-            <Form.Label htmlFor="stockSymbol">Stock Symbol</Form.Label>
+          <Form.Group
+            controlId="stockSymbol"
+            style={{ flex: 1, marginRight: "10px" }}
+          >
+            <Form.Label>Stock Symbol</Form.Label>
             <Form.Control
-              id="stockSymbol"
               type="text"
               placeholder="Enter stock symbol"
               value={stockSymbol}
               onChange={(e) => setStockSymbol(e.target.value)}
               required
             />
-          </div>
-          <div style={{ flex: 1, marginRight: "20px" }}>
-            <Form.Label htmlFor="quantity">Quantity</Form.Label>
+          </Form.Group>
+
+          <Form.Group
+            controlId="quantity"
+            style={{ flex: 1, marginRight: "10px" }}
+          >
+            <Form.Label>Quantity</Form.Label>
             <Form.Control
-              id="quantity"
               type="number"
               placeholder="Enter quantity"
               min="1"
@@ -84,10 +93,18 @@ const ModifyPortfolio = () => {
               onChange={(e) => setQuantity(parseInt(e.target.value, 10))}
               required
             />
-          </div>
-          <div style={{ flex: 1, marginRight: "20px", marginTop: "30px" }}>
+          </Form.Group>
+
+          <div
+            style={{
+              flex: 1,
+              marginRight: "10px",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+            }}
+          >
             <Form.Check
-              inline
               type="radio"
               label="Add"
               name="operation"
@@ -97,9 +114,7 @@ const ModifyPortfolio = () => {
               onChange={(e) => setOperation(e.target.value)}
             />
             <Form.Check
-              inline
               type="radio"
-              backgroundColor="#1c2a24"
               label="Remove"
               name="operation"
               id="remove"
@@ -108,18 +123,24 @@ const ModifyPortfolio = () => {
               onChange={(e) => setOperation(e.target.value)}
             />
           </div>
-          <Button
-            className="button"
-            style={{ marginTop: "30px" }}
-            variant="primary"
-            type="submit"
-          >
+
+          <Button className="button" variant="primary" type="submit">
             Modify Portfolio
           </Button>
         </div>
-
-        {message && <Alert variant="info">{message}</Alert>}
       </Form>
+
+      <Modal show={showModal} onHide={() => setShowModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Portfolio Update</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>{message}</Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowModal(false)}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Container>
   );
 };
