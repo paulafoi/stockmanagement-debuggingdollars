@@ -9,17 +9,16 @@ from datetime import timedelta
 import logging
 
 app = Flask(__name__)
-CORS(app, origins=[
-    "http://localhost:3000",
-    "http://debuggingdollars.storage.googleapis.com",
-    "https://debuggingdollars.storage.googleapis.com"  
-], supports_credentials=True)
+CORS(app, supports_credentials=True)
+
 app.config["SECRET_KEY"] = "wRm$$4e&4E!"
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=3)
 app.config["SESSION_COOKIE_NAME"] = "debuggindollars_session"
 app.config["REMEMBER_COOKIE_DURATION"] = timedelta(days=3)
 app.config['SESSION_COOKIE_PATH'] = '/'
 app.config['SESSION_COOKIE_SECURE'] = False
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+
 
 un = 'ADMIN'
 pw = '.5wBPW3qSwJuWC!'
@@ -108,7 +107,7 @@ def portfolio_overview():
     # Return the total value and the symbol_values dictionary directly within a list
     return jsonify(response)
 
-@app.route("/handleLogin", methods=["POST"])
+@app.route("/login", methods=["POST", "OPTIONS"])
 def handle_login():
     data = request.get_json()
     username = data.get("username")
@@ -131,7 +130,7 @@ def handle_login():
     except Exception as e:
         return jsonify({"message": "Error with login: {}".format(str(e))}), 500
 
-@app.route("/handleRegister", methods=["POST"])
+@app.route("/register", methods=["POST"])
 def handle_register():
     data = request.get_json()
     username = data.get("username")
@@ -153,7 +152,7 @@ def handle_register():
     except Exception as e:
         return jsonify({"message": "Error with registration: {}".format(str(e))}), 500
 
-@app.route("/handleLogout", methods=["POST"])
+@app.route("/logout")
 def logout():
     session.clear()
     return jsonify({"message": "Logged out."}), 200
