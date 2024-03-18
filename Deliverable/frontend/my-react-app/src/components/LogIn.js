@@ -18,7 +18,7 @@ const Login = ({ setLoginSuccessful }) => {
     try {
       // Send a POST request to the backend
       const response = await fetch(
-        "http://mcsbt-integration-paula.ew.r.appspot.com/handleLogin",
+        "http://mcsbt-integration-paula.ew.r.appspot.com/login",
         {
           method: "POST",
           headers: {
@@ -39,7 +39,6 @@ const Login = ({ setLoginSuccessful }) => {
         alert("Login failed: " + data.message);
       }
     } catch (error) {
-      console.error("Login request failed", error);
       alert("Login request failed");
     }
   };

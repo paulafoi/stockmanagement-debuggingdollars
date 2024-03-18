@@ -33,7 +33,7 @@ const App = () => {
   const handleLogout = async () => {
     try {
       const response = await fetch(
-        "http://mcsbt-integration-paula.ew.r.appspot.com/handleLogout",
+        "http://mcsbt-integration-paula.ew.r.appspot.com/logout",
         {
           method: "POST",
           credentials: "include",
