@@ -103,7 +103,7 @@ def portfolio_overview():
     # Return the total value and the symbol_values dictionary directly within a list
     return jsonify(response)
 
-@app.route("/handleLogin", methods=["POST"])
+@app.route("/login", methods=["POST"])
 def handle_login():
     data = request.get_json()
     username = data.get("username")
@@ -125,7 +125,7 @@ def handle_login():
     except Exception as e:
         return jsonify({"message": "Error with login: {}".format(str(e))}), 500
 
-@app.route("/handleRegister", methods=["POST"])
+@app.route("/register", methods=["POST"])
 def handle_register():
     data = request.get_json()
     username = data.get("username")
@@ -147,7 +147,7 @@ def handle_register():
     except Exception as e:
         return jsonify({"message": "Error with registration: {}".format(str(e))}), 500
 
-@app.route("/handleLogout", methods=["POST"])
+@app.route("/logout", methods=["POST"])
 def logout():
     session.clear()
     return jsonify({"message": "Logged out."}), 200
