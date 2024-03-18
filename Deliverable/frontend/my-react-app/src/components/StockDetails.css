@@ -38,3 +38,7 @@
   border-color: #d9534f;
   border-radius: 0.25rem;
 }
+
+.carousel-content {
+  padding: 25px;
+}
