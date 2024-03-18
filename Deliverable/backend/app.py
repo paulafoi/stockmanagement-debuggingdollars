@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, session, request, make_response
+from flask import Flask, jsonify, session, request, redirect
 import requests
 from flask_cors import CORS
 import hashlib
@@ -9,16 +9,12 @@ from datetime import timedelta
 import logging
 
 app = Flask(__name__)
-CORS(app, supports_credentials=True)
-
 app.config["SECRET_KEY"] = "wRm$$4e&4E!"
-app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=3)
-app.config["SESSION_COOKIE_NAME"] = "debuggindollars_session"
-app.config["REMEMBER_COOKIE_DURATION"] = timedelta(days=3)
-app.config['SESSION_COOKIE_PATH'] = '/'
-app.config['SESSION_COOKIE_SECURE'] = False
-app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config["SESSION_COOKIE_NAME"] = "debuggingdollars_session"
+app.config['SESSION_COOKIE_SAMESITE'] = "None"
+app.config['SESSION_COOKIE_SECURE'] = True
 
+CORS(app, supports_credentials=True, resources={r"/*" : {"origins" : "*"}})
 
 un = 'ADMIN'
 pw = '.5wBPW3qSwJuWC!'
@@ -72,7 +68,7 @@ def stockinfo_for_symbol(symbol):
 #API endpoint to request portfolio overview and total value of portfolio
 @app.route('/overview')
 def portfolio_overview():
-    userID = 21
+    userID = session.get("userID")
     portfolio= USER_STOCKS.query.filter_by(USERID = userID).all()
     
     if not portfolio:
@@ -107,19 +103,8 @@ def portfolio_overview():
     # Return the total value and the symbol_values dictionary directly within a list
     return jsonify(response)
 
-@app.route("/login", methods=["POST", "OPTIONS"])
+@app.route("/handleLogin", methods=["POST"])
 def handle_login():
-     # Preflight request handling for OPTIONS
-    if request.method == "OPTIONS": 
-        # Create an empty response
-        response = make_response()
-        # Set CORS headers
-        response.headers["Access-Control-Allow-Origin"] = "http://localhost:3000"
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-        response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-        return response
-    
     data = request.get_json()
     username = data.get("username")
     password = hash_pw(data.get("password"))
@@ -132,7 +117,6 @@ def handle_login():
             #set session cookie to permanent
             session.permanent = True 
             session.modified = True 
-            session["username"] = user.USERNAME
             session["userID"] = user.USERID
             logging.debug("User %s logged in, session: %s", user.USERNAME, session)
             return jsonify({"message": "Login successful"}), 200
@@ -141,7 +125,7 @@ def handle_login():
     except Exception as e:
         return jsonify({"message": "Error with login: {}".format(str(e))}), 500
 
-@app.route("/register", methods=["POST"])
+@app.route("/handleRegister", methods=["POST"])
 def handle_register():
     data = request.get_json()
     username = data.get("username")
@@ -163,14 +147,14 @@ def handle_register():
     except Exception as e:
         return jsonify({"message": "Error with registration: {}".format(str(e))}), 500
 
-@app.route("/logout")
+@app.route("/handleLogout", methods=["POST"])
 def logout():
     session.clear()
     return jsonify({"message": "Logged out."}), 200
 
 @app.route("/modifyPortfolio", methods = ["POST"])
 def modify_portfolio():
-    userID = 21
+    userID = session.get("userID")
     data = request.get_json()
     stock_symbol = data.get('stock_symbol').upper().replace(" ","") 
     quantity = int(data.get('quantity'))
