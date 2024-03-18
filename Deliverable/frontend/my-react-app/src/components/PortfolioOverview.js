@@ -14,26 +14,39 @@ const PortfolioOverview = () => {
   const fetchPortfolio = useCallback(async () => {
     try {
       const response = await fetch(
-        `https://mcsbt-integration-paula.ew.r.appspot.com//overview`,
+        `https://mcsbt-integration-paula.ew.r.appspot.com/overview`,
         {
           credentials: "include",
         }
       );
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
       const data = await response.json();
-      setPortfolio(data.symbols || {});
-      setTotalValue(data.total_value || 0);
+      if (!response.ok) {
+        // Check if the error is specifically about having no stocks
+        if (data.error === "No stocks found for the user") {
+          setPortfolio({});
+          setTotalValue(0.0);
+          setError("");
+        } else {
+          // For other errors, throw an error to be caught in the catch block
+          throw new Error(data.error || "Network response was not ok");
+        }
+      } else {
+        // If the response is OK, update the portfolio and total value as usual
+        setPortfolio(data.symbols || {});
+        setTotalValue(data.total_value || 0);
+        setError("");
+      }
     } catch (error) {
-      setError("Failed to fetch portfolio. Please try again later.");
+      setError(
+        error.message || "Failed to fetch portfolio. Please try again later."
+      );
     }
-  }, []); // Empty array means this callback will only be created once on mount
+  }, []);
 
   // useEffect to call fetchPortfolio when the component mounts
   useEffect(() => {
     fetchPortfolio();
-  }, [fetchPortfolio]); // fetchPortfolio is a dependency of this effect
+  }, [fetchPortfolio]);
 
   const handleStockSelection = (symbol) => {
     setSelectedStock(symbol);
