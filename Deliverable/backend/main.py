@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, session, request, redirect
+from flask import Flask, jsonify, session, request, make_response
 import requests
 from flask_cors import CORS
 import hashlib
@@ -103,8 +103,11 @@ def portfolio_overview():
     # Return the total value and the symbol_values dictionary directly within a list
     return jsonify(response)
 
-@app.route("/login", methods=["POST"])
+@app.route("/login", methods=["POST", "OPTIONS"])
 def handle_login():
+    if request.method == 'OPTIONS':
+        return add_cors_headers(make_response())
+    
     data = request.get_json()
     username = data.get("username")
     password = hash_pw(data.get("password"))
@@ -223,7 +226,14 @@ def verify_session():
     else:
         return jsonify(isLoggedIn=False), 401
 
-
+def add_cors_headers(response):
+    origin = request.headers.get('Origin')
+    if origin:
+        response.headers['Access-Control-Allow-Origin'] = origin
+        response.headers['Access-Control-Allow-Credentials'] = 'true'  # Allow credentials
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
+    return response
 
 def hash_pw(string):
     hash = hashlib.sha1()

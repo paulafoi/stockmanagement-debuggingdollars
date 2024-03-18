@@ -18,7 +18,7 @@ const Login = ({ setLoginSuccessful }) => {
     try {
       // Send a POST request to the backend
       const response = await fetch(
-        "http://mcsbt-integration-paula.ew.r.appspot.com/login",
+        "https://mcsbt-integration-paula.ew.r.appspot.com/login",
         {
           method: "POST",
           headers: {

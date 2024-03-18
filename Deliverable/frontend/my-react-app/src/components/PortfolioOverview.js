@@ -14,7 +14,7 @@ const PortfolioOverview = () => {
   const fetchPortfolio = useCallback(async () => {
     try {
       const response = await fetch(
-        `http://mcsbt-integration-paula.ew.r.appspot.com//overview`,
+        `https://mcsbt-integration-paula.ew.r.appspot.com//overview`,
         {
           credentials: "include",
         }

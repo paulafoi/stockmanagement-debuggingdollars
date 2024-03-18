@@ -12,7 +12,7 @@ const StockDetails = ({ symbol }) => {
     const fetchStockInfo = async () => {
       try {
         const response = await fetch(
-          `http://mcsbt-integration-paula.appspot.com/stockinfo/${symbol}`,
+          `https://mcsbt-integration-paula.appspot.com/stockinfo/${symbol}`,
           {
             credentials: "include",
           }

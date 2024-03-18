@@ -14,7 +14,7 @@ const ModifyPortfolio = ({ onPortfolioChange }) => {
     setShowModal(false); // Ensure modal is not shown initially
     try {
       const response = await fetch(
-        `http://mcsbt-integration-paula.ew.r.appspot.com/modifyPortfolio`,
+        `https://mcsbt-integration-paula.ew.r.appspot.com/modifyPortfolio`,
         {
           method: "POST",
           headers: {
