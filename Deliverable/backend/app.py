@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, session, request, redirect
+from flask import Flask, jsonify, session, request, make_response
 import requests
 from flask_cors import CORS
 import hashlib
@@ -109,6 +109,17 @@ def portfolio_overview():
 
 @app.route("/login", methods=["POST", "OPTIONS"])
 def handle_login():
+     # Preflight request handling for OPTIONS
+    if request.method == "OPTIONS": 
+        # Create an empty response
+        response = make_response()
+        # Set CORS headers
+        response.headers["Access-Control-Allow-Origin"] = "http://localhost:3000"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        return response
+    
     data = request.get_json()
     username = data.get("username")
     password = hash_pw(data.get("password"))
