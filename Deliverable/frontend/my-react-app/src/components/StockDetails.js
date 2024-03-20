@@ -56,6 +56,8 @@ const StockDetails = ({ symbol }) => {
     }))
     .reverse();
 
+  // inspiration for graph: https://www.chartjs.org/docs/latest/samples/line/multi-axis.html
+  // inspiration for carousel slider: https://react-bootstrap.netlify.app/docs/components/carousel/
   return (
     <Container className="stock-details-container">
       {error && <Alert variant="danger">{error}</Alert>}
@@ -68,14 +70,14 @@ const StockDetails = ({ symbol }) => {
           <Carousel.Item>
             <div className="carousel-content">
               <ResponsiveContainer width="100%" height={450}>
-                <h2>Stock Details for {symbol}</h2>
+                <h4>Stock Details for {symbol}</h4>
                 <LineChart
                   data={transformedData}
                   margin={{
-                    top: 50,
+                    top: 20,
                     right: 50,
                     left: 50,
-                    bottom: 50,
+                    bottom: 40,
                   }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />

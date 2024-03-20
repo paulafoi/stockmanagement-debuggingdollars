@@ -53,9 +53,9 @@ const PortfolioOverview = () => {
   };
 
   return (
-    <Container fluid className="portfolio-overview">
-      <Row>
-        <Col xs={12} className="app-header">
+    <Container fluid>
+      <Row className="portfolio-overview">
+        <Col xs={10} className="app-header">
           <h2>Portfolio Overview</h2>
           {portfolio ? (
             <>
@@ -72,8 +72,8 @@ const PortfolioOverview = () => {
           )}
         </Col>
       </Row>
-      <Row>
-        <Col xs={4} className="sidebar">
+      <Row className="portfolio-overview">
+        <Col xs={3} className="sidebar">
           {portfolio &&
             Object.entries(portfolio).map(([symbol, details]) => (
               <div
@@ -88,7 +88,7 @@ const PortfolioOverview = () => {
               </div>
             ))}
         </Col>
-        <Col xs={8} className="main-content">
+        <Col xs={7} className="main-content">
           {error && <Alert variant="danger">{error}</Alert>}
           {selectedStock && <StockDetails symbol={selectedStock} />}
         </Col>

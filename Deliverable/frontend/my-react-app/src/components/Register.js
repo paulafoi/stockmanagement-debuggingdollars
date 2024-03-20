@@ -15,7 +15,7 @@ const Register = ({ setShowLogin, setRegistrationMessage }) => {
 
     try {
       const response = await fetch(
-        "http://mcsbt-integration-paula.ew.r.appspot.com/handleRegister",
+        "https://mcsbt-integration-paula.ew.r.appspot.com/register",
         {
           method: "POST",
           headers: {
@@ -39,7 +39,7 @@ const Register = ({ setShowLogin, setRegistrationMessage }) => {
   };
 
   return (
-    <Container width="5px">
+    <Container width="50%">
       <h2>Register</h2>
       <p>Please create your account below.</p>
       <Form width="5px" onSubmit={handleRegister}>

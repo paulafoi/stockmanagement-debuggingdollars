@@ -28,3 +28,10 @@
   font-size: smaller;
   font-style: italic;
 }
+
+.portfolio-overview {
+  display: flex;
+  justify-content: center;
+
+  height: 100%;
+}

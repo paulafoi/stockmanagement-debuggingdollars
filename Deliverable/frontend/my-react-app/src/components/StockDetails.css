@@ -6,12 +6,6 @@
   box-shadow: 0 2rem 2rem rgba(0, 0, 0, 0.1);
 }
 
-/* Style for the header of the stock details */
-.stock-details-header {
-  color: #76b947;
-  margin-bottom: 0.5rem;
-}
-
 /* Style for the table */
 .stock-table {
   color: #343a40;

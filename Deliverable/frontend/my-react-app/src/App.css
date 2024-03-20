@@ -20,8 +20,8 @@
 
 /* Adjust the spacing around the main content */
 .main-content {
-  padding-top: 20px; /* Add space above */
-  padding-bottom: 20px; /* Add space below */
+  padding-top: 20px;
+  padding-bottom: 20px;
 }
 
 .button {
