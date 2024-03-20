@@ -9,6 +9,7 @@ from datetime import timedelta
 import logging
 
 app = Flask(__name__)
+#Configuration for session cookie
 app.config["SECRET_KEY"] = "wRm$$4e&4E!"
 app.config["SESSION_COOKIE_NAME"] = "debuggingdollars_session"
 app.config['SESSION_COOKIE_SAMESITE'] = "None"
@@ -16,6 +17,7 @@ app.config['SESSION_COOKIE_SECURE'] = True
 
 CORS(app, supports_credentials=True, resources={r"/*" : {"origins" : "*"}})
 
+#Configuration for oracle database connection
 un = 'ADMIN'
 pw = '.5wBPW3qSwJuWC!'
 dsn = '(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=adb.eu-madrid-1.oraclecloud.com))(connect_data=(service_name=g70802e41303b93_debuggingdollarsdatabase_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))'
@@ -103,6 +105,7 @@ def portfolio_overview():
     # Return the total value and the symbol_values dictionary directly within a list
     return jsonify(response)
 
+#API endpoint for login (OPTIONS for preflight request)
 @app.route("/login", methods=["POST", "OPTIONS"])
 def handle_login():
     if request.method == 'OPTIONS':
@@ -128,6 +131,7 @@ def handle_login():
     except Exception as e:
         return jsonify({"message": "Error with login: {}".format(str(e))}), 500
 
+#API endpoint for registration (OPTIONS for preflight request)
 @app.route("/register", methods=["POST", "OPTIONS"])
 def handle_register():
     if request.method == 'OPTIONS':
@@ -158,6 +162,7 @@ def logout():
     session.clear()
     return jsonify({"message": "Logged out."}), 200
 
+#API endpoint for modifying the portfolio (add or remove stocks from user portfolio) 
 @app.route("/modifyPortfolio", methods = ["POST"])
 def modify_portfolio():
     userID = session.get("userID")
@@ -196,7 +201,6 @@ def modify_portfolio():
                     # Trying to remove more stock than is available
                     return jsonify({"message": "Requested quantity exceeds stocks in portfolio"}), 400
             else:
-                # Stock does not exist in the user's portfolio
                 return jsonify({"message": "Stock not found in portfolio"}), 404
         else:
             return jsonify({"message": "Invalid operation"}), 400
