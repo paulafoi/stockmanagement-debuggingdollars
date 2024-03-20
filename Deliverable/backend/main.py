@@ -128,8 +128,11 @@ def handle_login():
     except Exception as e:
         return jsonify({"message": "Error with login: {}".format(str(e))}), 500
 
-@app.route("/register", methods=["POST"])
+@app.route("/register", methods=["POST", "OPTIONS"])
 def handle_register():
+    if request.method == 'OPTIONS':
+        return add_cors_headers(make_response())
+    
     data = request.get_json()
     username = data.get("username")
     password = hash_pw(data.get("password"))
