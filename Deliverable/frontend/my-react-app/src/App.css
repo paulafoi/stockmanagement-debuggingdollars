@@ -29,3 +29,11 @@
   border-color: #1c2a24;
   color: #1c2a24;
 }
+
+.form-container {
+  max-width: 400px;
+  margin: auto;
+  padding: 40px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+}

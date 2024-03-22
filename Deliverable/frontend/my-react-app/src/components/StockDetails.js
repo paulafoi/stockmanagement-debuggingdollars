@@ -122,7 +122,7 @@ const StockDetails = ({ symbol }) => {
           </Carousel.Item>
           <Carousel.Item>
             <div className="carousel-content">
-              <h2>Stock Details for {symbol}</h2>
+              <h4>Stock Details for {symbol}</h4>
               <Table striped bordered hover size="sm" className="stock-table">
                 <thead>
                   <tr>

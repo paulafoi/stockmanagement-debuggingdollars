@@ -39,33 +39,35 @@ const Register = ({ setShowLogin, setRegistrationMessage }) => {
   };
 
   return (
-    <Container width="50%">
-      <h2>Register</h2>
-      <p>Please create your account below.</p>
-      <Form width="5px" onSubmit={handleRegister}>
-        <Form.Group>
-          <Form.Label>Username</Form.Label>
-          <Form.Control
-            type="text"
-            placeholder="Enter username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-        </Form.Group>
-        <Form.Group>
-          <Form.Label>Password</Form.Label>
-          <Form.Control
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </Form.Group>
-        <Button variant="primary" type="submit">
-          Register
-        </Button>
-      </Form>
-    </Container>
+    <div>
+      <Container width="50%">
+        <h2>Register</h2>
+        <p>Please create your account below.</p>
+        <Form width="5px" onSubmit={handleRegister}>
+          <Form.Group>
+            <Form.Label>Username</Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="Enter username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+          </Form.Group>
+          <Form.Group>
+            <Form.Label>Password</Form.Label>
+            <Form.Control
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </Form.Group>
+          <Button variant="primary" type="submit" className="btn btn-success">
+            Register
+          </Button>
+        </Form>
+      </Container>
+    </div>
   );
 };
 

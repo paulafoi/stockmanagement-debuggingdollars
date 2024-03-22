@@ -75,7 +75,7 @@ const App = () => {
       </Navbar>
       <Container className="main-content">
         {!loginSuccessful ? (
-          <>
+          <div className="form-container">
             {showLogin ? (
               <>
                 <Login setLoginSuccessful={setLoginSuccessful} />
@@ -100,7 +100,7 @@ const App = () => {
                 </Button>
               </>
             )}
-          </>
+          </div>
         ) : (
           <PortfolioOverview />
         )}
