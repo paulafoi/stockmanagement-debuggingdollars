@@ -1,5 +1,7 @@
 The frontend can be reached when loading: https://debuggingdollars.storage.googleapis.com/index.html
 
+Please open on Chrome. 
+
 
 For logging in you can use the following credentials or create your own account: 
 username : paula
