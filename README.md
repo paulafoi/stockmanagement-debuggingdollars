@@ -1,4 +1,4 @@
-The frontend can be reached when loading: https://debugging-dollars.storage.googleapis.com/index.html
+The frontend can be reached when loading: https://debuggingdollars.storage.googleapis.com/index.html
 
 
 For logging in you can use the following credentials or create your own account: 
